@@ -71,7 +71,10 @@ fn main() {
         boundary_conditions: boundary_conditions,
     };
     
-    let _result = truss.solve_truss();
+    let result = truss.solve_truss();
+
+    let displacements = result.displacements;
+    println!("{displacements:?}");
 
 
 }
