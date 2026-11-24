@@ -1,18 +1,23 @@
-mod boundary_condition;
-mod element;
-mod load;
-mod node;
-mod truss;
-mod truss_result;
-mod nodal_displacement;
-mod element_result;
-mod reaction;
+mod model {
+    pub mod boundary_condition;
+    pub mod element;
+    pub mod load;
+    pub mod node;
+    pub mod truss;
+}
 
-use boundary_condition::BoundaryCondition;
-use element::Element;
-use load::Load;
-use node::Node;
-use truss::Truss;
+mod results {
+    pub mod element_result;
+    pub mod nodal_displacement;
+    pub mod reaction;
+    pub mod truss_result;
+}
+
+use model::boundary_condition::BoundaryCondition;
+use model::element::Element;
+use model::load::Load;
+use model::node::Node;
+use model::truss::Truss;
 
 fn main() {
     let node1 = Node{
@@ -76,7 +81,7 @@ fn main() {
     let displacements = result.displacements;
     let reactions = result.reactions;
     println!("displacements: {displacements:#?}");
-    println!("reactions: {reactions:#?}");
+    println!("reactions: {reactions:#?}")
 
 
 }

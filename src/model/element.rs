@@ -1,6 +1,6 @@
 use nalgebra::{Matrix4, Vector4};
 
-use crate::node::Node;
+use crate::model::node::Node;
 
 pub struct Element<'a>{
     pub node_1: &'a Node,

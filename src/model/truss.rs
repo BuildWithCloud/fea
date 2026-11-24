@@ -1,13 +1,13 @@
 use nalgebra::{DMatrix, DVector, Vector4, vector};
 
-use crate::boundary_condition::BoundaryCondition;
-use crate::element::Element;
-use crate::element_result::ElementResult;
-use crate::load::Load;
-use crate::nodal_displacement::{NodalDisplacement};
-use crate::node::{Node};
-use crate::reaction::{Reaction};
-use crate::truss_result::TrussResult;
+use crate::model::boundary_condition::BoundaryCondition;
+use crate::model::element::Element;
+use crate::results::element_result::ElementResult;
+use crate::model::load::Load;
+use crate::results::nodal_displacement::{NodalDisplacement};
+use crate::model::node::{Node};
+use crate::results::reaction::{Reaction};
+use crate::results::truss_result::TrussResult;
 
 pub struct Truss<'a>{
     pub nodes: Vec<&'a Node>,

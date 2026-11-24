@@ -1,6 +1,6 @@
-use crate::nodal_displacement::NodalDisplacement;
-use crate::reaction::Reaction;
-use crate::element_result::ElementResult;
+use crate::results::nodal_displacement::NodalDisplacement;
+use crate::results::reaction::Reaction;
+use crate::results::element_result::ElementResult;
 
 pub struct TrussResult<'a>{
     pub displacements: Vec<NodalDisplacement>,

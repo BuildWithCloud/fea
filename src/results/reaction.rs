@@ -1,4 +1,4 @@
-use crate::node::Node;
+use crate::model::node::Node;
 #[derive(Debug)]
 pub struct Reaction<'a>{
     pub node: &'a Node,

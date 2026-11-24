@@ -1,4 +1,4 @@
-use crate::node::Node;
+use crate::model::node::Node;
 
 pub struct BoundaryCondition<'a>{
     pub node: &'a Node,
