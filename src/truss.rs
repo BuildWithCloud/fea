@@ -1,3 +1,5 @@
+use std::f64::consts::PI;
+
 use nalgebra::{DMatrix, DVector, Vector4, vector};
 
 use crate::boundary_condition::BoundaryCondition;
@@ -15,7 +17,7 @@ pub struct Truss<'a>{
     pub loads: Vec<&'a Load<'a>>,
     pub boundary_conditions: Vec<&'a BoundaryCondition<'a>>,
 }
-impl Truss<'_>{
+impl<'a> Truss<'a>{
     pub fn calculate_global_stiffness_matrix(&self) -> DMatrix<f64>{
         let number_of_dof = self.nodes.len() * 2;
         let mut k_global = DMatrix::zeros(number_of_dof, number_of_dof);
@@ -110,7 +112,7 @@ impl Truss<'_>{
         return displacements
     }
 
-    pub fn solve_truss(&self) -> TrussResult<'_>{
+    pub fn solve_truss(&self) -> TrussResult<'a>{
         let global_load_vector = self.calculate_global_load_vector();
         let global_stiffness_matrix = self.calculate_global_stiffness_matrix();
 
@@ -122,7 +124,7 @@ impl Truss<'_>{
             let node_1_index = self.node_index(element.node_1.id);
             let node_2_index = self.node_index(element.node_2.id);
             let dof = [node_1_index * 2, node_1_index * 2 + 1, node_2_index * 2, node_2_index * 2 + 1];
-            let global_displacement:Vector4<f64> = vector![displacements[dof[0]],displacements[dof[0]+1],displacements[dof[3]], displacements[dof[3]+1]];
+            let global_displacement:Vector4<f64> = vector![displacements[dof[0]],displacements[dof[0]+1],displacements[dof[2]], displacements[dof[2]+1]];
             
 
             let element_result = ElementResult{
@@ -141,13 +143,12 @@ impl Truss<'_>{
             let mut force_y = 0.0;
             for element_result in &element_results{
                 if element_result.node_1.id == boundary_condition.node.id{
-                    force_x += element_result.axial_force * element_result.theta().cos();
-                    force_y += element_result.axial_force * element_result.theta().sin();
+                    force_x -= element_result.axial_force * element_result.theta().cos();
+                    force_y -= element_result.axial_force * element_result.theta().sin();
                 }
                 else if element_result.node_2.id == boundary_condition.node.id {
-                    let theta = element_result.theta()-180.0;
-                    force_x += element_result.axial_force * theta.cos();
-                    force_y += element_result.axial_force * theta.sin();
+                    force_x += element_result.axial_force * element_result.theta().cos();
+                    force_y += element_result.axial_force * element_result.theta().sin();
                 }
             }
             let reaction = Reaction{
