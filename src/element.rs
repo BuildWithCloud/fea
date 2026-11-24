@@ -82,6 +82,6 @@ impl Element<'_>{
         let local_displacements = self.local_displacements(global_displacements);
         let new_length = f64::abs(local_displacements[0] -local_displacements[2]);
         let old_length = self.length();
-        return new_length-old_length/old_length;
+        return (new_length-old_length)/old_length;
     }
 }
