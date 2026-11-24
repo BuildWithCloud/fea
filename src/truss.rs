@@ -122,7 +122,7 @@ impl Truss<'_>{
             let node_1_index = self.node_index(element.node_1.id);
             let node_2_index = self.node_index(element.node_2.id);
             let dof = [node_1_index * 2, node_1_index * 2 + 1, node_2_index * 2, node_2_index * 2 + 1];
-            let global_displacement:Vector4<f64> = vector![displacements[dof[0]],displacements[dof[0]+1],displacements[dof[1]], displacements[dof[1]+1]];
+            let global_displacement:Vector4<f64> = vector![displacements[dof[0]],displacements[dof[0]+1],displacements[dof[3]], displacements[dof[3]+1]];
             
 
             let element_result = ElementResult{
@@ -142,12 +142,12 @@ impl Truss<'_>{
             for element_result in &element_results{
                 if element_result.node_1.id == boundary_condition.node.id{
                     force_x += element_result.axial_force * element_result.theta().cos();
-                    force_y += element_result.axial_force * element_result.theta().cos();
+                    force_y += element_result.axial_force * element_result.theta().sin();
                 }
                 else if element_result.node_2.id == boundary_condition.node.id {
                     let theta = element_result.theta()-180.0;
                     force_x += element_result.axial_force * theta.cos();
-                    force_y += element_result.axial_force * theta.cos();
+                    force_y += element_result.axial_force * theta.sin();
                 }
             }
             let reaction = Reaction{
@@ -160,7 +160,7 @@ impl Truss<'_>{
 
         let mut nodal_displacements: Vec<NodalDisplacement> = vec![];
         for node in &self.nodes{
-            let dof = self.node_index(node.id);
+            let dof = self.node_index(node.id) * 2;
             let nodal_displacement = NodalDisplacement{
                 node_id: node.id,
                 x_displacement: displacements[dof],
