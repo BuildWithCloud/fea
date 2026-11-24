@@ -131,6 +131,17 @@ pub fn deformed_truss(truss: &Truss, truss_result: &TrussResult, deformation_sca
     let pixel_heigh = 720;
     let pixel_width = 1280;
 
+    let mut max_stress = f64::NEG_INFINITY;
+    let mut min_stress = f64::INFINITY;
+    for element in &truss_result.element_results{
+        if element.stress > max_stress{
+            max_stress = element.stress;
+        }
+        if element.stress < min_stress{
+            min_stress = element.stress;
+        }
+    }
+
 
     let root = BitMapBackend::new(path, (pixel_width, pixel_heigh)).into_drawing_area();
     root.fill(&WHITE).unwrap();
@@ -160,7 +171,8 @@ pub fn deformed_truss(truss: &Truss, truss_result: &TrussResult, deformation_sca
     for element in &truss_result.element_results {
         let p1 = deformed_position(element.node_1);
         let p2 = deformed_position(element.node_2);
-        chart.draw_series(LineSeries::new(vec![p1, p2], RED.stroke_width(3)))?;
+        let colour = stress_colour(element.stress, min_stress, max_stress);
+        chart.draw_series(LineSeries::new(vec![p1, p2], colour.stroke_width(3)))?;
     }
 
     // plot boundary conditions as black and free dofs as green
@@ -223,4 +235,13 @@ pub fn deformed_truss(truss: &Truss, truss_result: &TrussResult, deformation_sca
 
     root.present()?;
     Ok(())
+}
+
+/// Map `value` in [min, max] to a colour from green (min) to red (max) by sweeping hue.
+fn stress_colour(value: f64, min: f64, max: f64) -> HSLColor {
+    let range = max - min;
+    // Guard against divide-by-zero when all stresses are equal.
+    let t = if range.abs() < f64::EPSILON { 0.0 } else { ((value - min) / range).clamp(0.0, 1.0) };
+    // Hue 1/3 = green, 0 = red.
+    HSLColor(1.0 / 3.0 * (1.0 - t), 1.0, 0.45)
 }
