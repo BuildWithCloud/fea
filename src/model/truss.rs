@@ -91,10 +91,8 @@ impl Truss{
         let cut_load_vector = self.calculate_cut_global_load_vector(global_load_vector);
         let cut_stiffness_matrix = self.calculate_cut_global_stiffness_matrix(global_stiffness_matrix);
 
-        let lu_decomposition = cut_stiffness_matrix.lu();
-        let reduced_displacement_solution = lu_decomposition
-            .solve(&cut_load_vector)
-            .expect("The reduced stiffness matrix is singular");
+        let chol = cut_stiffness_matrix.cholesky().expect("The reduced stiffness matrix is singular");
+        let reduced_displacement_solution = chol.solve(&cut_load_vector);
 
         let mut displacements_used = 0;
         let removed_dofs = self.calculate_dofs_to_cut();
