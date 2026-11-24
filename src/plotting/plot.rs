@@ -9,21 +9,15 @@ pub fn undeformed_truss(truss: &Truss, path: &str) -> Result<(), Box<dyn std::er
     let max_x = truss.nodes.iter().map(|n| n.position.x).fold(f64::NEG_INFINITY, f64::max);
     let max_y = truss.nodes.iter().map(|n| n.position.y).fold(f64::NEG_INFINITY, f64::max);
 
-    let width = max_x - min_x;
-    let height = max_y - min_y;
+    let pixel_height: u32 = 720;
+    let pixel_width: u32 = 1280;
 
-    let scale_min_x = min_x - width * 0.1;
-    let scale_max_x = max_x + width * 0.1;
-    let scale_min_y = min_y - height * 0.1;
-    let scale_max_y = max_y + height * 0.1;
-
-    let pixel_heigh = 720;
-    let pixel_width = 1280;
-
-
-    let root = BitMapBackend::new(path, (pixel_width, pixel_heigh)).into_drawing_area();
+    let root = BitMapBackend::new(path, (pixel_width, pixel_height)).into_drawing_area();
     root.fill(&WHITE).unwrap();
     let root = root.margin(10, 10, 10, 10);
+
+    let plot_px = plot_area_px(&root, "Undeformed")?;
+    let (x_range, y_range) = equal_scale_ranges(min_x, max_x, min_y, max_y, plot_px);
     // After this point, we should be able to construct a chart context
     let mut chart = ChartBuilder::on(&root)
         // Set the caption of the chart
@@ -32,7 +26,7 @@ pub fn undeformed_truss(truss: &Truss, path: &str) -> Result<(), Box<dyn std::er
         .x_label_area_size(20)
         .y_label_area_size(40)
         // Finally attach a coordinate on the drawing area and make a chart context
-        .build_cartesian_2d(scale_min_x..scale_max_x, scale_min_y..scale_max_y)?;
+        .build_cartesian_2d(x_range, y_range)?;
 
     // Then we can draw a mesh
     chart
@@ -125,16 +119,8 @@ pub fn deformed_truss(truss: &Truss, truss_result: &TrussResult, deformation_sca
     let max_x = deformed_nodes.iter().map(|p| p.0).fold(f64::NEG_INFINITY, f64::max);
     let max_y = deformed_nodes.iter().map(|p| p.1).fold(f64::NEG_INFINITY, f64::max);
 
-    let width = max_x - min_x;
-    let height = max_y - min_y;
-
-    let scale_min_x = min_x - width * 0.1;
-    let scale_max_x = max_x + width * 0.1;
-    let scale_min_y = min_y - height * 0.1;
-    let scale_max_y = max_y + height * 0.1;
-
-    let pixel_heigh = 720;
-    let pixel_width = 1280;
+    let pixel_heigh: u32 = 720;
+    let pixel_width: u32 = 1280;
 
     let mut max_stress = f64::NEG_INFINITY;
     let mut min_stress = f64::INFINITY;
@@ -151,6 +137,10 @@ pub fn deformed_truss(truss: &Truss, truss_result: &TrussResult, deformation_sca
     let root = BitMapBackend::new(path, (pixel_width, pixel_heigh)).into_drawing_area();
     root.fill(&WHITE).unwrap();
     let root = root.margin(10, 10, 10, 10);
+
+    let plot_px = plot_area_px(&root, "Deformed")?;
+    let (x_range, y_range) = equal_scale_ranges(min_x, max_x, min_y, max_y, plot_px);
+
     // After this point, we should be able to construct a chart context
     let mut chart = ChartBuilder::on(&root)
         // Set the caption of the chart
@@ -159,7 +149,7 @@ pub fn deformed_truss(truss: &Truss, truss_result: &TrussResult, deformation_sca
         .x_label_area_size(20)
         .y_label_area_size(40)
         // Finally attach a coordinate on the drawing area and make a chart context
-        .build_cartesian_2d(scale_min_x..scale_max_x, scale_min_y..scale_max_y)?;
+        .build_cartesian_2d(x_range, y_range)?;
 
     // Then we can draw a mesh
     chart
@@ -196,7 +186,6 @@ pub fn deformed_truss(truss: &Truss, truss_result: &TrussResult, deformation_sca
         &|c, s, st| {
             return EmptyElement::at(c)    // We want to construct a composed element on-the-fly
             + Circle::new((0,0),s,st.filled()) // At this point, the new pixel coordinate is established
-            + Text::new(format!("({:.2}, {:.2})", c.0, c.1), (10, 0), ("sans-serif", 18).into_font());
         },
     ))?;
 
@@ -215,7 +204,6 @@ pub fn deformed_truss(truss: &Truss, truss_result: &TrussResult, deformation_sca
         &|c, s, st| {
             return EmptyElement::at(c)    // We want to construct a composed element on-the-fly
             + Circle::new((0,0),s,st.filled()) // At this point, the new pixel coordinate is established
-            + Text::new(format!("({:.2}, {:.2})", c.0, c.1), (10, 0), ("sans-serif", 18).into_font());
         },
     ))?;
 
@@ -240,6 +228,43 @@ pub fn deformed_truss(truss: &Truss, truss_result: &TrussResult, deformation_sca
 
     root.present()?;
     Ok(())
+}
+
+/// Pixel size of the plotting area a chart with this layout will get (same
+/// caption / label sizes as the real charts), found by building a throwaway chart.
+fn plot_area_px(
+    root: &DrawingArea<BitMapBackend, plotters::coord::Shift>,
+    caption: &str,
+) -> Result<(u32, u32), Box<dyn std::error::Error>> {
+    let chart = ChartBuilder::on(root)
+        .caption(caption, ("sans-serif", 40).into_font())
+        .x_label_area_size(20)
+        .y_label_area_size(40)
+        .build_cartesian_2d(0.0..1.0, 0.0..1.0)?;
+    Ok(chart.plotting_area().dim_in_pixel())
+}
+
+/// Axis ranges around the given bounds (with 10% padding) such that one data
+/// unit spans the same number of pixels in x and y.
+fn equal_scale_ranges(
+    min_x: f64,
+    max_x: f64,
+    min_y: f64,
+    max_y: f64,
+    (px_w, px_h): (u32, u32),
+) -> (std::ops::Range<f64>, std::ops::Range<f64>) {
+    let pad = |lo: f64, hi: f64| ((hi - lo) * 1.1).max(1e-12);
+    let span_x = pad(min_x, max_x);
+    let span_y = pad(min_y, max_y);
+    let cx = (min_x + max_x) / 2.0;
+    let cy = (min_y + max_y) / 2.0;
+
+    // Data units per pixel: the larger requirement wins so everything fits.
+    let units_per_px = (span_x / px_w as f64).max(span_y / px_h as f64);
+    let half_x = units_per_px * px_w as f64 / 2.0;
+    let half_y = units_per_px * px_h as f64 / 2.0;
+
+    ((cx - half_x)..(cx + half_x), (cy - half_y)..(cy + half_y))
 }
 
 /// Map `value` in [min, max] to a colour from green (min) to red (max) by sweeping hue.
