@@ -161,7 +161,7 @@ impl<'a> Truss<'a>{
         for node in &self.nodes{
             let dof = self.node_index(node.id) * 2;
             let nodal_displacement = NodalDisplacement{
-                node_id: node.id,
+                node: *node,
                 x_displacement: displacements[dof],
                 y_displacement: displacements[dof+1],
             };
