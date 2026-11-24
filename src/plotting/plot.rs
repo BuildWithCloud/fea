@@ -216,7 +216,7 @@ pub fn deformed_truss(truss: &Truss, truss_result: &TrussResult, deformation_sca
         BLACK.stroke_width(1),
     ))?;
     root.draw(&Text::new(
-        format!("Deformation scale: x{}", deformation_scale),
+        format!("Deformation scale: x{:e}", deformation_scale),
         (x0 + 8, y0 + 6),
         ("sans-serif", 18).into_font(),
     ))?;
