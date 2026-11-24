@@ -1,17 +1,5 @@
-mod model {
-    pub mod boundary_condition;
-    pub mod element;
-    pub mod load;
-    pub mod node;
-    pub mod truss;
-}
-
-mod results {
-    pub mod element_result;
-    pub mod nodal_displacement;
-    pub mod reaction;
-    pub mod truss_result;
-}
+mod model;
+mod results;
 
 use model::boundary_condition::BoundaryCondition;
 use model::element::Element;
