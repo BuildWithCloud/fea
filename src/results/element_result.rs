@@ -10,8 +10,8 @@ pub struct ElementResult<'a>{
 
 impl ElementResult<'_> {
     pub fn theta(& self) -> f64{
-        let delta_y = self.node_2.y_position - self.node_1.y_position;
-        let delta_x = self.node_2.x_position - self.node_1.x_position;
+        let delta_y = self.node_2.position.y - self.node_1.position.y;
+        let delta_x = self.node_2.position.x - self.node_1.position.x;
         delta_y.atan2(delta_x)
     }   
 }

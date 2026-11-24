@@ -1,27 +1,27 @@
 mod model;
 mod results;
+mod plotting;
 
 use model::boundary_condition::BoundaryCondition;
 use model::element::Element;
 use model::load::Load;
 use model::node::Node;
 use model::truss::Truss;
+use model::position::Position;
+use plotting::plot;
 
 fn main() {
     let node1 = Node{
         id: 1,
-        x_position: 0.0,
-        y_position: 0.0,
+        position: Position { x: (0.0), y: (0.0) }
     };
     let node2 = Node{
         id: 2,
-        x_position: 1.0,
-        y_position: 0.0,
+        position: Position { x: (1.0), y: (0.0) }
     };
     let node3 = Node{
         id: 3,
-        x_position: 0.0,
-        y_position: 1.0,
+        position: Position { x: (0.0), y: (1.0) }
     };
     let element1 = Element{
         node_1: &node1,
@@ -69,7 +69,10 @@ fn main() {
     let displacements = result.displacements;
     let reactions = result.reactions;
     println!("displacements: {displacements:#?}");
-    println!("reactions: {reactions:#?}")
+    println!("reactions: {reactions:#?}");
+
+    let path = "./plots/version1.png";
+    plot::undeformed_truss(&truss, path).unwrap();
 
 
 }
