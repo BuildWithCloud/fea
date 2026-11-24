@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub struct Node{
     pub id: usize,
     pub x_position: f64,

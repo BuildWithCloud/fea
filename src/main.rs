@@ -74,7 +74,9 @@ fn main() {
     let result = truss.solve_truss();
 
     let displacements = result.displacements;
-    println!("{displacements:?}");
+    let reactions = result.reactions;
+    println!("displacements: {displacements:#?}");
+    println!("reactions: {reactions:#?}");
 
 
 }
