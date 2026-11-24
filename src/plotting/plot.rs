@@ -22,7 +22,7 @@ pub fn undeformed_truss(truss: &Truss, path: &str) -> Result<(), Box<dyn std::er
 
 
     let root = BitMapBackend::new(path, (pixel_width, pixel_heigh)).into_drawing_area();
-    root.fill(&WHITE);
+    root.fill(&WHITE).unwrap();
     let root = root.margin(10, 10, 10, 10);
     // After this point, we should be able to construct a chart context
     let mut chart = ChartBuilder::on(&root)
@@ -133,7 +133,7 @@ pub fn deformed_truss(truss: &Truss, truss_result: &TrussResult, deformation_sca
 
 
     let root = BitMapBackend::new(path, (pixel_width, pixel_heigh)).into_drawing_area();
-    root.fill(&WHITE);
+    root.fill(&WHITE).unwrap();
     let root = root.margin(10, 10, 10, 10);
     // After this point, we should be able to construct a chart context
     let mut chart = ChartBuilder::on(&root)
