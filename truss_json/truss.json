@@ -1,0 +1,18 @@
+{
+  "nodes": [
+    { "id": 1, "x": 0.0, "y": 0.0 },
+    { "id": 2, "x": 1.0, "y": 0.0 },
+    { "id": 3, "x": 0.0, "y": 1.0 }
+  ],
+  "elements": [
+    { "node_1": 1, "node_2": 2, "youngs_modulus": 200e9, "area": 0.001963 },
+    { "node_1": 2, "node_2": 3, "youngs_modulus": 200e9, "area": 0.001963 }
+  ],
+  "loads": [
+    { "node": 2, "x_force": 0.0, "y_force": -100.0 }
+  ],
+  "boundary_conditions": [
+    { "node": 1, "x_fixed": true, "y_fixed": true },
+    { "node": 3, "x_fixed": true, "y_fixed": true }
+  ]
+}
