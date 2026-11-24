@@ -1,5 +1,3 @@
-use std::f64::consts::PI;
-
 use nalgebra::{DMatrix, DVector, Vector4, vector};
 
 use crate::boundary_condition::BoundaryCondition;
