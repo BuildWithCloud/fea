@@ -9,7 +9,7 @@ use std::path::Path;
 use plotting::plot;
 
 fn main() {
-    let truss = read_truss(Path::new("./examples/truss.json")).unwrap_or_else(|error| {
+    let truss = read_truss(Path::new("./truss_json/layered_truss.json")).unwrap_or_else(|error| {
         eprintln!("failed to read truss: {error}");
         std::process::exit(1);
     });
@@ -25,7 +25,7 @@ fn main() {
     plot::undeformed_truss(&truss, path).unwrap();
 
     let path =  "./plots/deformed.png";
-    plot::deformed_truss(&truss, &result, 100000.0, path).unwrap();
+    plot::deformed_truss(&truss, &result, 1.0, path).unwrap();
 
 
 }

@@ -1,2 +1,5 @@
 /target
 /plots
+/truss_json
+flamegraph.svg
+perf.data
