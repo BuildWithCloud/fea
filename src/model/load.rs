@@ -1,7 +1,5 @@
-use crate::model::node::Node;
-
-pub struct Load<'a>{
-    pub node: &'a Node,
+pub struct Load{
+    pub node_id: usize,
     pub x_force: f64,
     pub y_force: f64
 }

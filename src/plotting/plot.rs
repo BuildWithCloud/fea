@@ -47,8 +47,10 @@ pub fn undeformed_truss(truss: &Truss, path: &str) -> Result<(), Box<dyn std::er
 
     // One LineSeries per element, so each line can get its own style later.
     for element in &truss.elements {
-        let p1 = (element.node_1.position.x, element.node_1.position.y);
-        let p2 = (element.node_2.position.x, element.node_2.position.y);
+        let node_1 = truss.node(element.node_1_id);
+        let node_2 = truss.node(element.node_2_id);
+        let p1 = (node_1.position.x, node_1.position.y);
+        let p2 = (node_2.position.x, node_2.position.y);
         chart.draw_series(LineSeries::new(vec![p1, p2], RED.stroke_width(3)))?;
     }
 
@@ -58,7 +60,10 @@ pub fn undeformed_truss(truss: &Truss, path: &str) -> Result<(), Box<dyn std::er
     let boundary_points: Vec<(f64, f64)> = truss
         .boundary_conditions
         .iter()
-        .map(|bc| (bc.node.position.x, bc.node.position.y))
+        .map(|bc| {
+            let node = truss.node(bc.node_id);
+            (node.position.x, node.position.y)
+        })
         .collect();
 
     chart.draw_series(PointSeries::of_element(
@@ -76,7 +81,7 @@ pub fn undeformed_truss(truss: &Truss, path: &str) -> Result<(), Box<dyn std::er
     let points: Vec<(f64, f64)> = truss
         .nodes
         .iter()
-        .filter(|n| !truss.boundary_conditions.iter().any(|bc| bc.node.id == n.id))
+        .filter(|n| !truss.boundary_conditions.iter().any(|bc| bc.node_id == n.id))
         .map(|n| (n.position.x, n.position.y))
         .collect();
 
@@ -103,7 +108,7 @@ pub fn deformed_truss(truss: &Truss, truss_result: &TrussResult, deformation_sca
         truss_result
             .displacements
             .iter()
-            .find(|d| d.node.id == node.id)
+            .find(|d| d.node_id == node.id)
             .map(|d| {
                 (
                     node.position.x + d.x_displacement * deformation_scale,
@@ -169,8 +174,8 @@ pub fn deformed_truss(truss: &Truss, truss_result: &TrussResult, deformation_sca
 
     // One LineSeries per element, so each line can get its own style later.
     for element in &truss_result.element_results {
-        let p1 = deformed_position(element.node_1);
-        let p2 = deformed_position(element.node_2);
+        let p1 = deformed_position(truss.node(element.node_1_id));
+        let p2 = deformed_position(truss.node(element.node_2_id));
         let colour = stress_colour(element.stress, min_stress, max_stress);
         chart.draw_series(LineSeries::new(vec![p1, p2], colour.stroke_width(3)))?;
     }
@@ -181,7 +186,7 @@ pub fn deformed_truss(truss: &Truss, truss_result: &TrussResult, deformation_sca
     let boundary_points: Vec<(f64, f64)> = truss
         .boundary_conditions
         .iter()
-        .map(|bc| deformed_position(bc.node))
+        .map(|bc| deformed_position(truss.node(bc.node_id)))
         .collect();
 
     chart.draw_series(PointSeries::of_element(
@@ -199,8 +204,8 @@ pub fn deformed_truss(truss: &Truss, truss_result: &TrussResult, deformation_sca
     let points: Vec<(f64, f64)> = truss_result
         .displacements
         .iter()
-        .filter(|n| !truss.boundary_conditions.iter().any(|bc| bc.node.id == n.node.id))
-        .map(|n| deformed_position(n.node))
+        .filter(|n| !truss.boundary_conditions.iter().any(|bc| bc.node_id == n.node_id))
+        .map(|n| deformed_position(truss.node(n.node_id)))
         .collect();
 
     chart.draw_series(PointSeries::of_element(

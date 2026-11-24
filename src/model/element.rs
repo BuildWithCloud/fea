@@ -2,14 +2,22 @@ use nalgebra::{Matrix4, Vector4};
 
 use crate::model::node::Node;
 
-pub struct Element<'a>{
-    pub node_1: &'a Node,
-    pub node_2: &'a Node,
+pub struct Element{
+    pub node_1_id: usize,
+    pub node_2_id: usize,
     pub youngs_modulus: f64,
     pub area: f64,
 }
 
-impl Element<'_>{
+/// An element together with the two nodes it connects, so geometry-dependent
+/// calculations have the positions they need. Create one with `Truss::element_views`.
+pub struct ElementView<'a>{
+    pub element: &'a Element,
+    pub node_1: &'a Node,
+    pub node_2: &'a Node,
+}
+
+impl ElementView<'_>{
     pub fn theta(& self) -> f64{
         let delta_y = self.node_2.position.y - self.node_1.position.y;
         let delta_x = self.node_2.position.x - self.node_1.position.x;
@@ -27,7 +35,7 @@ impl Element<'_>{
         let theta = self.theta();
         let c = theta.cos();
         let s = theta.sin();
-        let k = self.youngs_modulus * self.area / l;
+        let k = self.element.youngs_modulus * self.element.area / l;
         Matrix4::from_row_slice(&[
             k*c*c, k*c*s, -k*c*c, -k*c*s,
             k*c*s, k*s*s, -k*c*s, -k*s*s,
@@ -37,7 +45,7 @@ impl Element<'_>{
     }
 
     pub fn axial_stiffness(&self) -> f64{
-        self.youngs_modulus * self.area / self.length()
+        self.element.youngs_modulus * self.element.area / self.length()
     }
 
     pub fn transformation_matrix(& self) -> Matrix4<f64>{
@@ -75,7 +83,7 @@ impl Element<'_>{
     }
 
     pub fn stress(&self, global_displacements: &Vector4<f64>) -> f64{
-        self.axial_force(global_displacements) / self.area
+        self.axial_force(global_displacements) / self.element.area
     }
 
     pub fn strain(&self, global_displacements: &Vector4<f64>) -> f64{
