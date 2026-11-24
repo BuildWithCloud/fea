@@ -66,13 +66,16 @@ fn main() {
     
     let result = truss.solve_truss();
 
-    let displacements = result.displacements;
-    let reactions = result.reactions;
+    let displacements = &result.displacements;
+    let reactions = &result.reactions;
     println!("displacements: {displacements:#?}");
     println!("reactions: {reactions:#?}");
 
     let path = "./plots/version1.png";
     plot::undeformed_truss(&truss, path).unwrap();
+
+    let path =  "./plots/deformed.png";
+    plot::deformed_truss(&truss, &result, 100000.0, path).unwrap();
 
 
 }
