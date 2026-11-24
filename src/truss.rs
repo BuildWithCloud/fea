@@ -1,9 +1,13 @@
-use nalgebra::{DMatrix, DVector};
+use nalgebra::{DMatrix, DVector, Vector4, vector};
 
 use crate::boundary_condition::BoundaryCondition;
 use crate::element::Element;
+use crate::element_result::ElementResult;
 use crate::load::Load;
-use crate::node::Node;
+use crate::nodal_displacement::{NodalDisplacement};
+use crate::node::{Node};
+use crate::reaction::{Reaction};
+use crate::truss_result::TrussResult;
 
 pub struct Truss<'a>{
     pub nodes: Vec<&'a Node>,
@@ -83,7 +87,7 @@ impl Truss<'_>{
         }
         return remove_dof
     }
-    pub fn calculate_displacements(&self, global_load_vector: DVector<f64>, global_stiffness_matrix: DMatrix<f64>) -> DVector<f64>{
+    fn calculate_displacements(&self, global_load_vector: DVector<f64>, global_stiffness_matrix: DMatrix<f64>) -> DVector<f64>{
         let cut_load_vector = self.calculate_cut_global_load_vector(global_load_vector);
         let cut_stiffness_matrix = self.calculate_cut_global_stiffness_matrix(global_stiffness_matrix);
 
@@ -105,6 +109,75 @@ impl Truss<'_>{
         }
         return displacements
     }
+
+    pub fn solve_truss(&self) -> TrussResult<'_>{
+        let global_load_vector = self.calculate_global_load_vector();
+        let global_stiffness_matrix = self.calculate_global_stiffness_matrix();
+
+        let displacements = self.calculate_displacements(global_load_vector, global_stiffness_matrix);
+
+        let mut element_results: Vec<ElementResult> = vec![];
+
+        for element in self.elements.iter(){
+            let node_1_index = self.node_index(element.node_1.id);
+            let node_2_index = self.node_index(element.node_2.id);
+            let dof = [node_1_index * 2, node_1_index * 2 + 1, node_2_index * 2, node_2_index * 2 + 1];
+            let global_displacement:Vector4<f64> = vector![displacements[dof[0]],displacements[dof[0]+1],displacements[dof[1]], displacements[dof[1]+1]];
+            
+
+            let element_result = ElementResult{
+                node_1: element.node_1,
+                node_2: element.node_2,
+                axial_force: element.axial_force(&global_displacement),
+                stress: element.stress(&global_displacement),
+                strain: element.strain(&global_displacement)
+            };
+            element_results.push(element_result);
+        }
+
+        let mut reactions: Vec<Reaction> = vec![];
+        for boundary_condition in &self.boundary_conditions{
+            let mut force_x = 0.0;
+            let mut force_y = 0.0;
+            for element_result in &element_results{
+                if element_result.node_1.id == boundary_condition.node.id{
+                    force_x += element_result.axial_force * element_result.theta().cos();
+                    force_y += element_result.axial_force * element_result.theta().cos();
+                }
+                else if element_result.node_2.id == boundary_condition.node.id {
+                    let theta = element_result.theta()-180.0;
+                    force_x += element_result.axial_force * theta.cos();
+                    force_y += element_result.axial_force * theta.cos();
+                }
+            }
+            let reaction = Reaction{
+                node: boundary_condition.node,
+                x_force: force_x,
+                y_force: force_y
+            };
+            reactions.push(reaction);
+        }
+
+        let mut nodal_displacements: Vec<NodalDisplacement> = vec![];
+        for node in &self.nodes{
+            let dof = self.node_index(node.id);
+            let nodal_displacement = NodalDisplacement{
+                node_id: node.id,
+                x_displacement: displacements[dof],
+                y_displacement: displacements[dof+1],
+            };
+            nodal_displacements.push(nodal_displacement);
+        }
+
+
+        return TrussResult{
+            displacements: nodal_displacements,
+            reactions: reactions,
+            element_results: element_results,
+        }
+
+    }
+
     fn node_index(&self, node_id: usize) -> usize{
         for i in 0..self.nodes.len(){
             if self.nodes[i].id == node_id{

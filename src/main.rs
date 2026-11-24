@@ -3,6 +3,10 @@ mod element;
 mod load;
 mod node;
 mod truss;
+mod truss_result;
+mod nodal_displacement;
+mod element_result;
+mod reaction;
 
 use boundary_condition::BoundaryCondition;
 use element::Element;
@@ -67,14 +71,8 @@ fn main() {
         boundary_conditions: boundary_conditions,
     };
     
-    let global_load_vector = truss.calculate_global_load_vector();
-    let global_stiffness_matrix = truss.calculate_global_stiffness_matrix();
+    let _result = truss.solve_truss();
 
-    let displacements = truss
-        .calculate_displacements(global_load_vector, global_stiffness_matrix)
-        .as_slice()
-        .to_vec();
-    println!("{displacements:#?}")
 
 }
 

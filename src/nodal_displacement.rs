@@ -1,5 +1,5 @@
 pub struct NodalDisplacement {
     pub node_id: usize,
-    pub x: f64,
-    pub y: f64,
+    pub x_displacement: f64,
+    pub y_displacement: f64,
 }
