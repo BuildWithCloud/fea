@@ -1,4 +1,6 @@
 use nalgebra::{DMatrix, DVector, Vector4, vector};
+use nalgebra_sparse::factorization::CscCholesky;
+use nalgebra_sparse::{CooMatrix, CscMatrix};
 
 use crate::model::boundary_condition::BoundaryCondition;
 use crate::model::element::{Element, ElementView};
@@ -36,16 +38,46 @@ impl Truss{
         k_global
     }
 
-    fn calculate_cut_global_stiffness_matrix(&self, global_stiffness_matrix: DMatrix<f64>) -> DMatrix<f64>{
+    fn calculate_cut_global_stiffness_matrix(&self,) -> CscMatrix<f64>{
+        let is_removed = self.calculate_dofs_to_cut();
+
+        let mut map: Vec<Option<usize>> = Vec::new();
+        let mut next_index = 0;
+        for i in 0..is_removed.len(){
+            if is_removed[i]{
+                map.push(None);
+            }else{
+                map.push(Some(next_index));
+                next_index += 1;
+            }
+        }
+
+        let mut coo = CooMatrix::new(next_index, next_index);
+
+        for element in self.element_views() {
+            let global_elemental_stiffness_matrix = element.stiffness_matrix();
+
+            let node_1_index = self.node_index(element.element.node_1_id);
+            let node_2_index = self.node_index(element.element.node_2_id);
+            let dof = [node_1_index * 2, node_1_index * 2 + 1, node_2_index * 2, node_2_index * 2 + 1];
+
+            for i in 0..4{
+                for j in 0..4{
+                    if map[dof[i]] != None && map[dof[j]] != None{
+                        coo.push(map[dof[i]].unwrap(), map[dof[j]].unwrap(), global_elemental_stiffness_matrix[(i, j)])
+                    }
+                }
+            }
+        }
+
+
         let remove_dof = self.calculate_dofs_to_cut();
         let retained_dofs: Vec<usize> = remove_dof.iter()
             .enumerate()
-            .filter_map(|(index, removed)| (!removed).then_some(index))
+            .filter_map(|(index, is_removed)| (!is_removed).then_some(index))
             .collect();
 
-        DMatrix::from_fn(retained_dofs.len(), retained_dofs.len(), |row, column| {
-            global_stiffness_matrix[(retained_dofs[row], retained_dofs[column])]
-        })
+        CscMatrix::from(&coo)
     }
 
     pub fn calculate_global_load_vector(&self) -> DVector<f64>{
@@ -89,9 +121,8 @@ impl Truss{
     }
     fn calculate_displacements(&self, global_load_vector: DVector<f64>, global_stiffness_matrix: DMatrix<f64>) -> DVector<f64>{
         let cut_load_vector = self.calculate_cut_global_load_vector(global_load_vector);
-        let cut_stiffness_matrix = self.calculate_cut_global_stiffness_matrix(global_stiffness_matrix);
 
-        let chol = cut_stiffness_matrix.cholesky().expect("The reduced stiffness matrix is singular");
+        let chol = CscCholesky::factor(&self.calculate_cut_global_stiffness_matrix()).expect("The reduced stiffness matrix is singular");
         let reduced_displacement_solution = chol.solve(&cut_load_vector);
 
         let mut displacements_used = 0;
