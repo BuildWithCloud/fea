@@ -69,14 +69,6 @@ impl Truss{
                 }
             }
         }
-
-
-        let remove_dof = self.calculate_dofs_to_cut();
-        let retained_dofs: Vec<usize> = remove_dof.iter()
-            .enumerate()
-            .filter_map(|(index, is_removed)| (!is_removed).then_some(index))
-            .collect();
-
         CscMatrix::from(&coo)
     }
 
