@@ -119,7 +119,7 @@ impl Truss{
         }
         return remove_dof
     }
-    fn calculate_displacements(&self, global_load_vector: DVector<f64>, global_stiffness_matrix: DMatrix<f64>) -> DVector<f64>{
+    fn calculate_displacements(&self, global_load_vector: DVector<f64>) -> DVector<f64>{
         let cut_load_vector = self.calculate_cut_global_load_vector(global_load_vector);
 
         let chol = CscCholesky::factor(&self.calculate_cut_global_stiffness_matrix()).expect("The reduced stiffness matrix is singular");
@@ -141,9 +141,8 @@ impl Truss{
 
     pub fn solve_truss(&self) -> TrussResult{
         let global_load_vector = self.calculate_global_load_vector();
-        let global_stiffness_matrix = self.calculate_global_stiffness_matrix();
 
-        let displacements = self.calculate_displacements(global_load_vector, global_stiffness_matrix);
+        let displacements = self.calculate_displacements(global_load_vector);
 
         let mut element_results: Vec<ElementResult> = vec![];
 
