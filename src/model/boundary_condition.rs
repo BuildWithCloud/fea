@@ -1,5 +1,5 @@
-pub struct BoundaryCondition{
+use nalgebra::SVector;
+pub struct BoundaryCondition<const D: usize>{
     pub node_id: usize,
-    pub x_fixed: bool,
-    pub y_fixed: bool
+    pub fixed_directions: SVector<bool, D>,
 }

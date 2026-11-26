@@ -1,7 +1,7 @@
 use crate::model::position::Position;
 
 #[derive(Debug)]
-pub struct Node{
+pub struct Node<const D: usize>{
     pub id: usize,
-    pub position: Position,
+    pub position: Position<D>,
 }

@@ -2,7 +2,7 @@ use plotters::prelude::*;
 
 use crate::{Truss, results::truss_result::TrussResult};
 
-pub fn undeformed_truss(truss: &Truss, path: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub fn undeformed_truss(truss: &Truss<2>, path: &str) -> Result<(), Box<dyn std::error::Error>> {
 
     let min_x = truss.nodes.iter().map(|n| n.position.x).fold(f64::INFINITY, f64::min);
     let min_y = truss.nodes.iter().map(|n| n.position.y).fold(f64::INFINITY, f64::min);
@@ -95,18 +95,18 @@ pub fn undeformed_truss(truss: &Truss, path: &str) -> Result<(), Box<dyn std::er
     Ok(())
 }
 
-pub fn deformed_truss(truss: &Truss, truss_result: &TrussResult, deformation_scale: f64, path: &str) -> Result<(), Box<dyn std::error::Error>>{
+pub fn deformed_truss(truss: &Truss<2>, truss_result: &TrussResult<2>, deformation_scale: f64, path: &str) -> Result<(), Box<dyn std::error::Error>>{
 
     // Deformed position of a node: original position plus scaled displacement.
-    let deformed_position = |node: &crate::model::node::Node| -> (f64, f64) {
+    let deformed_position = |node: &crate::model::node::Node<2>| -> (f64, f64) {
         truss_result
             .displacements
             .iter()
             .find(|d| d.node_id == node.id)
             .map(|d| {
                 (
-                    node.position.x + d.x_displacement * deformation_scale,
-                    node.position.y + d.y_displacement * deformation_scale,
+                    node.position.x + d.displacement.x * deformation_scale,
+                    node.position.y + d.displacement.y * deformation_scale,
                 )
             })
             .unwrap_or((node.position.x, node.position.y))

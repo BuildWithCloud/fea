@@ -4,6 +4,8 @@ use nalgebra_sparse::{CooMatrix, CscMatrix};
 
 use crate::model::boundary_condition::BoundaryCondition;
 use crate::model::element::{Element, ElementView};
+use crate::model::force::Force;
+use crate::results::displacement::Displacement;
 use crate::results::element_result::ElementResult;
 use crate::model::load::Load;
 use crate::results::nodal_displacement::{NodalDisplacement};
@@ -11,13 +13,13 @@ use crate::model::node::{Node};
 use crate::results::reaction::{Reaction};
 use crate::results::truss_result::TrussResult;
 
-pub struct Truss{
-    pub nodes: Vec<Node>,
+pub struct Truss<const D: usize>{
+    pub nodes: Vec<Node<D>>,
     pub elements: Vec<Element>,
-    pub loads: Vec<Load>,
-    pub boundary_conditions: Vec<BoundaryCondition>,
+    pub loads: Vec<Load<D>>,
+    pub boundary_conditions: Vec<BoundaryCondition<D>>,
 }
-impl Truss{
+impl Truss<2>{
     pub fn calculate_global_stiffness_matrix(&self) -> DMatrix<f64>{
         let number_of_dof = self.nodes.len() * 2;
         let mut k_global = DMatrix::zeros(number_of_dof, number_of_dof);
@@ -100,11 +102,11 @@ impl Truss{
         let mut remove_dof = vec![false; number_of_dof];
 
         for boundary_condition in self.boundary_conditions.iter() {
-            if boundary_condition.x_fixed{
+            if boundary_condition.fixed_directions.x{
                 let dof  = self.node_index(boundary_condition.node_id) * 2;
                 remove_dof[dof] = true;
             }
-            if boundary_condition.y_fixed{
+            if boundary_condition.fixed_directions.y{
                 let dof  = self.node_index(boundary_condition.node_id) * 2 + 1;
                 remove_dof[dof] = true;
             }
@@ -131,7 +133,7 @@ impl Truss{
         return displacements
     }
 
-    pub fn solve_truss(&self) -> TrussResult{
+    pub fn solve_truss(&self) -> TrussResult<2>{
         let global_load_vector = self.calculate_global_load_vector();
 
         let displacements = self.calculate_displacements(global_load_vector);
@@ -156,7 +158,7 @@ impl Truss{
             element_results.push(element_result);
         }
 
-        let mut reactions: Vec<Reaction> = vec![];
+        let mut reactions: Vec<Reaction<2>> = vec![];
         for boundary_condition in &self.boundary_conditions{
             let mut force_x = 0.0;
             let mut force_y = 0.0;
@@ -172,19 +174,17 @@ impl Truss{
             }
             let reaction = Reaction{
                 node_id: boundary_condition.node_id,
-                x_force: force_x,
-                y_force: force_y
+                force: Force(vector![force_x, force_y]),
             };
             reactions.push(reaction);
         }
 
-        let mut nodal_displacements: Vec<NodalDisplacement> = vec![];
+        let mut nodal_displacements: Vec<NodalDisplacement<2>> = vec![];
         for node in &self.nodes{
             let dof = self.node_index(node.id) * 2;
             let nodal_displacement = NodalDisplacement{
                 node_id: node.id,
-                x_displacement: displacements[dof],
-                y_displacement: displacements[dof+1],
+                displacement: Displacement(vector![displacements[dof], displacements[dof+1]]),
             };
             nodal_displacements.push(nodal_displacement);
         }
@@ -199,7 +199,7 @@ impl Truss{
     }
 
     /// Pairs each element with the nodes it connects.
-    pub fn element_views(&self) -> impl Iterator<Item = ElementView<'_>>{
+    pub fn element_views(&self) -> impl Iterator<Item = ElementView<'_, 2>>{
         self.elements.iter().map(|element| ElementView{
             element,
             node_1: self.node(element.node_1_id),
@@ -207,7 +207,7 @@ impl Truss{
         })
     }
 
-    pub fn node(&self, node_id: usize) -> &Node{
+    pub fn node(&self, node_id: usize) -> &Node<2>{
         &self.nodes[self.node_index(node_id)]
     }
 

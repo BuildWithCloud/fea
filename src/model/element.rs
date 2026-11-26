@@ -11,13 +11,13 @@ pub struct Element{
 
 /// An element together with the two nodes it connects, so geometry-dependent
 /// calculations have the positions they need. Create one with `Truss::element_views`.
-pub struct ElementView<'a>{
+pub struct ElementView<'a, const D: usize>{
     pub element: &'a Element,
-    pub node_1: &'a Node,
-    pub node_2: &'a Node,
+    pub node_1: &'a Node<D>,
+    pub node_2: &'a Node<D>,
 }
 
-impl ElementView<'_>{
+impl ElementView<'_, 2>{
     pub fn theta(& self) -> f64{
         let delta_y = self.node_2.position.y - self.node_1.position.y;
         let delta_x = self.node_2.position.x - self.node_1.position.x;

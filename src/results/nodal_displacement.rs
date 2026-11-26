@@ -1,6 +1,7 @@
+use crate::results::displacement::Displacement;
+
 #[derive(Debug)]
-pub struct NodalDisplacement {
+pub struct NodalDisplacement<const D: usize> {
     pub node_id: usize,
-    pub x_displacement: f64,
-    pub y_displacement: f64,
+    pub displacement: Displacement<D>,
 }

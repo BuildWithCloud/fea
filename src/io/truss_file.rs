@@ -1,5 +1,6 @@
 //! Reads a truss from a JSON file. See `examples/truss.json` for the format.
 
+use nalgebra::vector;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::error::Error;
@@ -58,27 +59,27 @@ struct TrussFile {
 }
 
 /// Loads and validates a truss from a JSON file.
-pub fn read_truss(path: &Path) -> Result<Truss, Box<dyn Error>> {
+pub fn read_truss(path: &Path) -> Result<Truss<2>, Box<dyn Error>> {
     truss_from_json(&fs::read_to_string(path)?)
 }
 
 /// Writes a truss (not its results) to a JSON file in the format `read_truss` accepts.
-pub fn write_truss(truss: &Truss, path: &Path) -> Result<(), Box<dyn Error>> {
+pub fn write_truss(truss: &Truss<2>, path: &Path) -> Result<(), Box<dyn Error>> {
     fs::write(path, truss_to_json(truss)?)?;
     Ok(())
 }
 
-fn truss_from_json(text: &str) -> Result<Truss, Box<dyn Error>> {
+fn truss_from_json(text: &str) -> Result<Truss<2>, Box<dyn Error>> {
     let file: TrussFile = serde_json::from_str(text)?;
     file.into_truss()
 }
 
-fn truss_to_json(truss: &Truss) -> Result<String, Box<dyn Error>> {
+fn truss_to_json(truss: &Truss<2>) -> Result<String, Box<dyn Error>> {
     Ok(serde_json::to_string_pretty(&TrussFile::from_truss(truss))?)
 }
 
 impl TrussFile {
-    fn from_truss(truss: &Truss) -> TrussFile {
+    fn from_truss(truss: &Truss<2>) -> TrussFile {
         TrussFile {
             nodes: truss.nodes.iter().map(|n| NodeFile {
                 id: n.id,
@@ -98,13 +99,13 @@ impl TrussFile {
             }).collect(),
             boundary_conditions: truss.boundary_conditions.iter().map(|b| BoundaryConditionFile {
                 node: b.node_id,
-                x_fixed: b.x_fixed,
-                y_fixed: b.y_fixed,
+                x_fixed: b.fixed_directions.x,
+                y_fixed: b.fixed_directions.y,
             }).collect(),
         }
     }
 
-    fn into_truss(self) -> Result<Truss, Box<dyn Error>> {
+    fn into_truss(self) -> Result<Truss<2>, Box<dyn Error>> {
         let mut ids = HashSet::new();
         for node in &self.nodes {
             if !ids.insert(node.id) {
@@ -137,8 +138,8 @@ impl TrussFile {
             }
         }
 
-        let nodes: Vec<Node> = self.nodes.into_iter()
-            .map(|n| Node { id: n.id, position: Position { x: n.x, y: n.y } })
+        let nodes: Vec<Node<2>> = self.nodes.into_iter()
+            .map(|n| Node { id: n.id, position: Position(vector![n.x, n.y]) })
             .collect();
 
         // Zero-length elements would give an infinite stiffness.
@@ -162,15 +163,11 @@ impl TrussFile {
             }).collect(),
             loads: self.loads.into_iter().map(|l| Load {
                 node_id: l.node,
-                force: Force{
-                    x: l.x_force,
-                    y: l.y_force
-                }
+                force: Force(vector![l.x_force, l.y_force]),
             }).collect(),
             boundary_conditions: self.boundary_conditions.into_iter().map(|b| BoundaryCondition {
                 node_id: b.node,
-                x_fixed: b.x_fixed,
-                y_fixed: b.y_fixed,
+                fixed_directions: vector![b.x_fixed, b.y_fixed],
             }).collect(),
         })
     }

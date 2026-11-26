@@ -1,6 +1,6 @@
 use crate::model::force::Force;
 
-pub struct Load{
+pub struct Load<const D: usize>{
     pub node_id: usize,
-    pub force: Force,
+    pub force: Force<D>,
 }

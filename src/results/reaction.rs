@@ -1,6 +1,7 @@
+use crate::model::force::Force;
+
 #[derive(Debug)]
-pub struct Reaction{
+pub struct Reaction<const D: usize>{
     pub node_id: usize,
-    pub x_force: f64,
-    pub y_force: f64,
+    pub force: Force<D>,
 }
