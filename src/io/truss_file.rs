@@ -182,7 +182,7 @@ mod tests {
 
     #[test]
     fn write_then_read_round_trips() {
-        let original = truss_from_json(include_str!("../../examples/truss.json")).unwrap();
+        let original = truss_from_json(include_str!("../../truss_json/truss.json")).unwrap();
         let json = truss_to_json(&original).unwrap();
         let copy = truss_from_json(&json).unwrap();
 
