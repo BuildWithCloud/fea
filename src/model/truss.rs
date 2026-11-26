@@ -78,8 +78,8 @@ impl Truss{
 
         for load in self.loads.iter(){
             let node_index = self.node_index(load.node_id) * 2;
-            global_loads_vector[node_index] += load.x_force;
-            global_loads_vector[node_index + 1] += load.y_force;
+            global_loads_vector[node_index] += load.force.x;
+            global_loads_vector[node_index + 1] += load.force.y;
         }
         global_loads_vector
     }

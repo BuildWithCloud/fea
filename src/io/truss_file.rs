@@ -8,6 +8,7 @@ use std::path::Path;
 
 use crate::model::boundary_condition::BoundaryCondition;
 use crate::model::element::Element;
+use crate::model::force::Force;
 use crate::model::load::Load;
 use crate::model::node::Node;
 use crate::model::position::Position;
@@ -92,8 +93,8 @@ impl TrussFile {
             }).collect(),
             loads: truss.loads.iter().map(|l| LoadFile {
                 node: l.node_id,
-                x_force: l.x_force,
-                y_force: l.y_force,
+                x_force: l.force.x,
+                y_force: l.force.y,
             }).collect(),
             boundary_conditions: truss.boundary_conditions.iter().map(|b| BoundaryConditionFile {
                 node: b.node_id,
@@ -161,8 +162,10 @@ impl TrussFile {
             }).collect(),
             loads: self.loads.into_iter().map(|l| Load {
                 node_id: l.node,
-                x_force: l.x_force,
-                y_force: l.y_force,
+                force: Force{
+                    x: l.x_force,
+                    y: l.y_force
+                }
             }).collect(),
             boundary_conditions: self.boundary_conditions.into_iter().map(|b| BoundaryCondition {
                 node_id: b.node,
