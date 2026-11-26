@@ -17,17 +17,18 @@ pub struct ElementView<'a, const D: usize>{
     pub node_2: &'a Node<D>,
 }
 
+impl<const D: usize> ElementView<'_, D>{
+    pub fn length(&self) ->f64{
+        (self.node_2.position - self.node_1.position).norm()
+    }
+}
+
+
 impl ElementView<'_, 2>{
     pub fn theta(& self) -> f64{
         let delta_y = self.node_2.position.y - self.node_1.position.y;
         let delta_x = self.node_2.position.x - self.node_1.position.x;
         delta_y.atan2(delta_x)
-    }
-
-    pub fn length(& self) -> f64{
-        let delta_y = self.node_2.position.y - self.node_1.position.y;
-        let delta_x = self.node_2.position.x - self.node_1.position.x;
-        (delta_x.powi(2) + delta_y.powi(2)).sqrt()
     }
 
     pub fn stiffness_matrix(& self) -> Matrix4<f64>{
